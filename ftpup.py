@@ -31,11 +31,13 @@ class SyncData:
 		self.localfnlist = self.getlocallist(dirs[:-1])
 		self.FTPlogin()
 		self.remotefnlist = self.getremotelist()
-		self.execsync()		
+		self.execsync()
 		self.FTPlogout()
 
 	def getlocallist(self, dirs):
-		return dict(map(lambda d: (d, tuple(os.listdir(d))), dirs))
+		#print (dict(map(lambda d: (d, tuple([f for f in os.listdir(d) if os.path.isfile(os.path.join(d, f))])), dirs)))
+		return dict(map(lambda d: (d, tuple([f for f in os.listdir(d) if os.path.isfile(os.path.join(d, f))])), dirs))
+		#return dict(map(lambda d: (d, tuple(os.listdir(d))), dirs))
 	
 	def getremotelist(self):
 		try:
@@ -51,6 +53,7 @@ class SyncData:
 		return os.path.dirname(fn)
 
 	def uploadfile(self, localdir, remotedir, fn):
+		print(fn)
 		locfile, remfile = (os.path.join(localdir, fn), os.path.join(remotedir, fn))
 		if args.verb: print('%s \t --> \t %s' % (locfile, remfile), end='')
 		self.ftp.storbinary("STOR " + remfile, open(locfile, 'rb'))
