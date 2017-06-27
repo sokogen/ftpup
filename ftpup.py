@@ -35,9 +35,7 @@ class SyncData:
 		self.FTPlogout()
 
 	def getlocallist(self, dirs):
-		#print (dict(map(lambda d: (d, tuple([f for f in os.listdir(d) if os.path.isfile(os.path.join(d, f))])), dirs)))
 		return dict(map(lambda d: (d, tuple([f for f in os.listdir(d) if os.path.isfile(os.path.join(d, f))])), dirs))
-		#return dict(map(lambda d: (d, tuple(os.listdir(d))), dirs))
 	
 	def getremotelist(self):
 		try:
