@@ -21,6 +21,7 @@ def getargs():
 	Все файлы из всех каталогов складываются в один каталог.
 	Поэтому во всех каталогах должны быть разные правила именования файлов. ''')
 	parser.add_argument('dirs', nargs='+', help='Собираем локальные и удаленные директории')
+	parser.add_argument('-k', '--keep-remote', dest='keep', action='store_true', help="Не удалять старые данные на удаленном сервере")
 	parser.add_argument('-v', '--verbose', dest='verb', action='store_true', help="Вывод отладочной информации")
 	parser.add_argument('-V', '--version', action='version', version='%(prog)s 0.8')
 	return parser.parse_args()
@@ -36,7 +37,7 @@ class SyncData:
 
 	def getlocallist(self, dirs):
 		return dict(map(lambda d: (d, tuple([f for f in os.listdir(d) if os.path.isfile(os.path.join(d, f))])), dirs))
-	
+
 	def getremotelist(self):
 		try:
 			fl = self.ftp.nlst(self.ftpurl.path)
@@ -57,7 +58,7 @@ class SyncData:
 		self.ftp.storbinary("STOR " + remfile, open(locfile, 'rb'))
 		if args.verb: print(bcolors.OKGREEN + '\tDONE' + bcolors.ENDC)
 		return None
-	
+
 	def removefile(self, fn):
 		self.ftp.delete(fn)
 		if args.verb: print('%s \t ' % fn, bcolors.WARNING + 'DELETED' + bcolors.ENDC)
@@ -69,15 +70,16 @@ class SyncData:
 		self.uploadfn = map(self.getbasename, self.uploadlist)
 		if len(self.uploadfn) != len(set(self.uploadfn)):
 			print(bcolors.WARNING + "WARNING:" + bcolors.ENDC, "неправильное именование файлов. Названия файлов в разных директориях не должны совпадать.")
-		if len(self.uploadlist) > 0 and args.verb:
-			print("Will be uploaded: %s." % ', '.join(self.uploadfn))
-		map(lambda fn: self.uploadfile(self.getdirname(fn), self.ftpurl.path, self.getbasename(fn)), self.uploadlist)
+		if len(self.uploadlist) > 0:
+			if args.verb: print("Will be uploaded: %s." % ', '.join(self.uploadfn))
+			map(lambda fn: self.uploadfile(self.getdirname(fn), self.ftpurl.path, self.getbasename(fn)), self.uploadlist)
 
 		# Removing deleted locally files
 		self.localbasenames = reduce(operator.concat, self.localfnlist.values())
 		self.removelist = filter(lambda f: f not in self.localbasenames, self.remotefnlist)
-		if len(self.removelist) > 0 and args.verb: print("Will be deleted: %s." % ', '.join(self.removelist))
-		map(lambda fn: self.removefile(os.path.join(self.ftpurl.path, fn)), self.removelist)
+		if len(self.removelist) > 0 and args.keep != True:
+			if args.verb: print("Will be deleted: %s." % ', '.join(self.removelist))
+			map(lambda fn: self.removefile(os.path.join(self.ftpurl.path, fn)), self.removelist)
 
 	def FTPlogin(self):
 		try:
