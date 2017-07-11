@@ -52,7 +52,6 @@ class SyncData:
 		return os.path.dirname(fn)
 
 	def uploadfile(self, localdir, remotedir, fn):
-		print(fn)
 		locfile, remfile = (os.path.join(localdir, fn), os.path.join(remotedir, fn))
 		if args.verb: print('%s \t --> \t %s' % (locfile, remfile), end='')
 		self.ftp.storbinary("STOR " + remfile, open(locfile, 'rb'))
